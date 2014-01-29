@@ -29,6 +29,7 @@
 using System;
 using System.Reflection;
 using System.Configuration.Internal;
+using System.Collections.Specialized;
 
 namespace System.Web.Configuration {
 
