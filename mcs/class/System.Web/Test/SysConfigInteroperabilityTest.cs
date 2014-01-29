@@ -1,8 +1,12 @@
 //
-// System.Configuration.HttpConfigurationSystem.cs
+// System.Web.SysConfigInteroperability.cs - 
+//   Unit tests for interoperability between System.Web and ConfigurationManager
 //
 // Authors:
-//  Chris Toshok (toshok@ximian.com)
+//	Darrell Mozingo <darrell.mozingo@7digital.com>
+//	Andres G. Aragoneses <andres@7digital.com>
+//
+// Copyright (C) 2013 7digital Media, Ltd (http://www.7digital.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -23,39 +27,28 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-// Copyright (C) 2006 Novell, Inc (http://www.novell.com)
-//
 
 using System;
-using System.Reflection;
-using System.Configuration.Internal;
+using System.Configuration;
+using System.Web;
 
-namespace System.Web.Configuration {
+using NUnit.Framework;
 
-	internal class HttpConfigurationSystem : IInternalConfigSystem
+namespace MonoTests.System.Web
+{
+
+	[TestFixture]
+	public class SystemConfigurationConfigurationManagerAppSettingsTest
 	{
-		internal IInternalConfigSystem fallback;
-
-		object IInternalConfigSystem.GetSection (string configKey)
+		[Test]
+		public void UsageOfSystemWebApiShouldNotBreakAccessToAppSettings()
 		{
-			var section = WebConfigurationManager.GetSection(configKey);
+			// any API in System.Web makes the ConfigurationManager replace its configSystem with the HttpConfigurationSystem,
+			// which causes BXC#11972
+			HttpUtility.HtmlEncode("foo");
 
-			if (fallback != null)
-			{
-				var col = section as NameValueCollection;
-
-				if (section == null || (col != null && col.Count == 0))
-					return fallback.GetSection(configKey);
-			}
-			return section;
-		}
-
-		void IInternalConfigSystem.RefreshConfig (string sectionName)
-		{
-		}
-
-		bool IInternalConfigSystem.SupportsUserConfig {
-			get { return true; }
+			Assert.IsNotNull(ConfigurationManager.AppSettings["BXC11972"],
+							  "Should still be able to access <appSettings> when System.Web.WebConfigurationManager is used");
 		}
 	}
 }
